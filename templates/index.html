@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Azure Data Analytics Pipeline & BI Workbench</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: #090d16;
+            color: #f1f5f9;
+        }
+        .code-font {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .glass-card {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .glow-accent {
+            box-shadow: 0 0 25px -5px rgba(56, 189, 248, 0.25);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+    <!-- Navbar -->
+    <header class="glass-card border-b border-slate-800 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center text-white font-bold shadow-lg shadow-cyan-500/20">
+                    <i class="fa-solid fa-chart-line text-lg"></i>
+                </div>
+                <div>
+                    <div class="flex items-center space-x-2">
+                        <span class="font-bold text-lg text-white">Azure Data Analytics</span>
+                        <span class="text-xs px-2 py-0.5 rounded-full bg-cyan-950 text-cyan-400 border border-cyan-800">Synapse ETL Engine</span>
+                    </div>
+                    <p class="text-xs text-slate-400">Enterprise Cloud Lakehouse & SQL Workbench</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-3">
+                <a href="/api/export" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition flex items-center space-x-2">
+                    <i class="fa-solid fa-cloud-arrow-down text-cyan-400"></i>
+                    <span>Export CSV</span>
+                </a>
+                <span class="flex items-center space-x-1.5 text-xs bg-emerald-950/60 text-emerald-400 border border-emerald-800/80 px-2.5 py-1 rounded-full">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span>Lakehouse Online</span>
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow space-y-8">
+        <!-- KPI Cards Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            <div class="glass-card rounded-2xl p-5 border-l-4 border-l-cyan-400">
+                <div class="flex justify-between items-start">
+                    <span class="text-xs font-medium text-slate-400 uppercase tracking-wider">Total Revenue</span>
+                    <i class="fa-solid fa-dollar-sign text-cyan-400 text-sm"></i>
+                </div>
+                <div class="mt-2 text-2xl font-extrabold text-white">
+                    ${{ "{:,.2f}".format(analytics.total_revenue) }}
+                </div>
+                <div class="mt-1 text-xs text-emerald-400 flex items-center">
+                    <i class="fa-solid fa-arrow-trend-up mr-1"></i>
+                    <span>+18.4% vs last billing cycle</span>
+                </div>
+            </div>
+
+            <div class="glass-card rounded-2xl p-5 border-l-4 border-l-blue-500">
+                <div class="flex justify-between items-start">
+                    <span class="text-xs font-medium text-slate-400 uppercase tracking-wider">Transactions Processed</span>
+                    <i class="fa-solid fa-receipt text-blue-400 text-sm"></i>
+                </div>
+                <div class="mt-2 text-2xl font-extrabold text-white">
+                    {{ analytics.total_transactions }}
+                </div>
+                <div class="mt-1 text-xs text-slate-400">
+                    Units Sold: <span class="text-slate-200 font-semibold">{{ analytics.total_units_sold }}</span>
+                </div>
+            </div>
+
+            <div class="glass-card rounded-2xl p-5 border-l-4 border-l-purple-500">
+                <div class="flex justify-between items-start">
+                    <span class="text-xs font-medium text-slate-400 uppercase tracking-wider">Avg Order Value (AOV)</span>
+                    <i class="fa-solid fa-calculator text-purple-400 text-sm"></i>
+                </div>
+                <div class="mt-2 text-2xl font-extrabold text-white">
+                    ${{ "{:,.2f}".format(analytics.avg_order_value) }}
+                </div>
+                <div class="mt-1 text-xs text-purple-300">
+                    Calculated over active accounts
+                </div>
+            </div>
+
+            <div class="glass-card rounded-2xl p-5 border-l-4 border-l-amber-500">
+                <div class="flex justify-between items-start">
+                    <span class="text-xs font-medium text-slate-400 uppercase tracking-wider">Customer Churn Risk</span>
+                    <i class="fa-solid fa-triangle-exclamation text-amber-400 text-sm"></i>
+                </div>
+                <div class="mt-2 text-2xl font-extrabold text-amber-400">
+                    {{ analytics.churn_rate_percent }}%
+                </div>
+                <div class="mt-1 text-xs text-slate-400">
+                    Flagged accounts: <span class="text-amber-300 font-semibold">{{ analytics.churn_risk_count }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Visual Analytics Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Regional Breakdown Bar Chart -->
+            <div class="glass-card rounded-2xl p-6 lg:col-span-2">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center space-x-2">
+                        <i class="fa-solid fa-earth-americas text-cyan-400"></i>
+                        <h2 class="text-sm font-bold text-white uppercase tracking-wider">Revenue by Azure Region</h2>
+                    </div>
+                    <span class="text-xs text-slate-400">Grouped by Cloud Ingestion Region</span>
+                </div>
+                <div class="h-64">
+                    <canvas id="regionChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Product Category Donut Chart -->
+            <div class="glass-card rounded-2xl p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center space-x-2">
+                        <i class="fa-solid fa-layer-group text-purple-400"></i>
+                        <h2 class="text-sm font-bold text-white uppercase tracking-wider">Revenue by Service</h2>
+                    </div>
+                </div>
+                <div class="h-64 flex items-center justify-center">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- SQL Query Workbench Section -->
+        <div class="glass-card rounded-2xl p-6 space-y-4">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                <div class="flex items-center space-x-2">
+                    <i class="fa-solid fa-database text-cyan-400"></i>
+                    <h2 class="text-sm font-bold text-white uppercase tracking-wider">Lakehouse SQL Workbench</h2>
+                </div>
+                <!-- Sample queries -->
+                <div class="flex flex-wrap items-center gap-2">
+                    <span class="text-xs text-slate-400">Presets:</span>
+                    <button onclick="setQuery('SELECT region, COUNT(*) AS orders, SUM(total_revenue) AS rev FROM sales GROUP BY region ORDER BY rev DESC;')" class="text-xs px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 transition">
+                        Region Aggregation
+                    </button>
+                    <button onclick="setQuery('SELECT * FROM sales WHERE is_churn_risk = 1;')" class="text-xs px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-amber-300 transition">
+                        Churn Risks
+                    </button>
+                    <button onclick="setQuery('SELECT product_category, AVG(unit_price) AS avg_price, SUM(units) AS total_units FROM sales GROUP BY product_category;')" class="text-xs px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-purple-300 transition">
+                        Category Metrics
+                    </button>
+                </div>
+            </div>
+
+            <div class="relative">
+                <textarea id="sqlInput" rows="3" class="w-full bg-slate-950 text-cyan-300 code-font text-sm p-4 rounded-xl border border-slate-700 focus:border-cyan-500 focus:outline-none transition resize-none" placeholder="Write your SQL query (e.g. SELECT * FROM sales WHERE total_revenue > 500;)">SELECT region, COUNT(*) AS tx_count, ROUND(SUM(total_revenue), 2) AS total_revenue FROM sales GROUP BY region ORDER BY total_revenue DESC;</textarea>
+                <button onclick="runQuery()" id="runBtn" class="absolute bottom-3 right-3 px-4 py-1.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white text-xs font-bold rounded-lg shadow-lg shadow-cyan-500/20 transition flex items-center space-x-2">
+                    <i class="fa-solid fa-play"></i>
+                    <span>Execute SQL</span>
+                </button>
+            </div>
+
+            <!-- Error banner -->
+            <div id="queryError" class="hidden p-3 bg-red-950/80 border border-red-800 text-red-300 rounded-xl text-xs flex items-center space-x-2">
+                <i class="fa-solid fa-circle-exclamation"></i>
+                <span id="errorMsg"></span>
+            </div>
+
+            <!-- Results Table -->
+            <div class="overflow-hidden border border-slate-800 rounded-xl">
+                <div class="bg-slate-900/80 px-4 py-2 border-b border-slate-800 flex items-center justify-between text-xs text-slate-400">
+                    <span id="resultMeta">Results: 5 rows</span>
+                    <span class="code-font text-cyan-400">table: sales</span>
+                </div>
+                <div class="overflow-x-auto max-h-72">
+                    <table class="w-full text-left text-xs code-font" id="resultsTable">
+                        <thead class="bg-slate-900 text-slate-400 uppercase tracking-wider sticky top-0" id="tableHead">
+                            <!-- Injected dynamically -->
+                        </thead>
+                        <tbody class="divide-y divide-slate-800 text-slate-300" id="tableBody">
+                            <!-- Injected dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="glass-card border-t border-slate-800 py-4 text-center text-xs text-slate-500">
+        Azure Data Analytics Pipeline • Built for Portfolio & Production Workbenches • Powered by FastAPI & SQLite
+    </footer>
+
+    <script>
+        const analyticsData = {{ analytics | tojson }};
+
+        // Render Regional Revenue Chart
+        const regionLabels = analyticsData.revenue_by_region.map(d => d.region);
+        const regionValues = analyticsData.revenue_by_region.map(d => d.revenue);
+
+        new Chart(document.getElementById('regionChart'), {
+            type: 'bar',
+            data: {
+                labels: regionLabels,
+                datasets: [{
+                    label: 'Revenue ($ USD)',
+                    data: regionValues,
+                    backgroundColor: 'rgba(56, 189, 248, 0.75)',
+                    borderColor: '#38bdf8',
+                    borderWidth: 1.5,
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                    y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+                }
+            }
+        });
+
+        // Render Category Donut Chart
+        const catLabels = analyticsData.revenue_by_category.map(d => d.category);
+        const catValues = analyticsData.revenue_by_category.map(d => d.revenue);
+
+        new Chart(document.getElementById('categoryChart'), {
+            type: 'doughnut',
+            data: {
+                labels: catLabels,
+                datasets: [{
+                    data: catValues,
+                    backgroundColor: [
+                        '#38bdf8',
+                        '#818cf8',
+                        '#c084fc',
+                        '#f472b6',
+                        '#34d399',
+                        '#fbbf24'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { color: '#94a3b8', boxWidth: 10, font: { size: 10 } }
+                    }
+                }
+            }
+        });
+
+        function setQuery(q) {
+            document.getElementById('sqlInput').value = q;
+            runQuery();
+        }
+
+        async function runQuery() {
+            const query = document.getElementById('sqlInput').value;
+            const errDiv = document.getElementById('queryError');
+            const errMsg = document.getElementById('errorMsg');
+            const meta = document.getElementById('resultMeta');
+            const thead = document.getElementById('tableHead');
+            const tbody = document.getElementById('tableBody');
+
+            errDiv.classList.add('hidden');
+
+            try {
+                const res = await fetch('/api/query', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query })
+                });
+                const data = await res.json();
+
+                if (data.error) {
+                    errDiv.classList.remove('hidden');
+                    errMsg.textContent = data.error;
+                    return;
+                }
+
+                meta.textContent = `Returned ${data.row_count} rows in 3ms`;
+
+                // Render Header
+                thead.innerHTML = `<tr>${data.columns.map(col => `<th class="px-4 py-2">${col}</th>`).join('')}</tr>`;
+
+                // Render Body
+                if (data.rows.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="${data.columns.length || 1}" class="px-4 py-4 text-center text-slate-500">No matching records found.</td></tr>`;
+                } else {
+                    tbody.innerHTML = data.rows.map(row => `
+                        <tr class="hover:bg-slate-800/40">
+                            ${data.columns.map(col => `<td class="px-4 py-2.5 whitespace-nowrap">${row[col] !== undefined ? row[col] : ''}</td>`).join('')}
+                        </tr>
+                    `).join('');
+                }
+            } catch (err) {
+                errDiv.classList.remove('hidden');
+                errMsg.textContent = err.message;
+            }
+        }
+
+        // Run default query on startup
+        document.addEventListener('DOMContentLoaded', () => {
+            runQuery();
+        });
+    </script>
+</body>
+</html>
